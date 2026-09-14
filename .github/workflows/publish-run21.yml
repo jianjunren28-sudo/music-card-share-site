@@ -1,0 +1,50 @@
+name: Publish Run 21 IPA
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-run21.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Run 21 artifact and publish
+        run: |
+          set -euo pipefail
+          curl -fL 'https://sdmntprnznorth.oaiusercontent.com/files/00000000-c57c-820b-922f-a5c7731942e5/raw?se=2026-09-14T22%3A17%3A52Z&sp=r&sv=2026-02-06&sr=b&scid=ae107790-0eda-5ae4-af7a-eea33099886d&skoid=d5627e4c-566b-4761-a954-54993b0ed17b&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-14T18%3A53%3A05Z&ske=2026-09-15T18%3A53%3A05Z&sks=b&skv=2026-02-06&sig=gl58xnNDNPR9nmpcN5d9EGKIKUooZ22WunwPDfmBrO0%3D' -o /tmp/run21.zip
+          rm -rf /tmp/run21
+          mkdir -p /tmp/run21
+          unzip -q /tmp/run21.zip -d /tmp/run21
+          IPA=$(find /tmp/run21 -maxdepth 2 -name '*.ipa' -type f | head -1)
+          test -n "$IPA"
+          mkdir -p install
+          cp "$IPA" install/HongchenMusicCard-Run21.ipa
+          ACTUAL=$(sha256sum install/HongchenMusicCard-Run21.ipa | awk '{print toupper($1)}')
+          test "$ACTUAL" = '609CC09AFC36E1337BA583BD2086B5D54108AF021352AF025A86BED27BA7BA60'
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('install/manifest.plist')
+          s=p.read_text()
+          s=s.replace('HongchenMusicCard-Run19.ipa','HongchenMusicCard-Run21.ipa')
+          p.write_text(s)
+
+          p=Path('install/index.html')
+          s=p.read_text()
+          s=s.replace('2026-09-14 17:40 (GMT+7)','2026-09-14 20:40 (GMT+7)')
+          s=s.replace('GitHub Actions Run #19','GitHub Actions Run #21')
+          s=s.replace('D74404EEA75A62097715A2EB19933381E364E8FE243986081D80A10658A80EC0','609CC09AFC36E1337BA583BD2086B5D54108AF021352AF025A86BED27BA7BA60')
+          p.write_text(s)
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add install/HongchenMusicCard-Run21.ipa install/manifest.plist install/index.html
+          git commit -m 'Publish signed Run 21 IPA'
+          git push
