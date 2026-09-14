@@ -26,20 +26,46 @@ jobs:
           def U():
               return str(uuid.uuid4()).upper()
 
+          get_text_uuid = U()
+          copy_uuid = U()
+          open_uuid = U()
+
+          shortcut_input = {
+              'Value': {'Type': 'ExtensionInput'},
+              'WFSerializationType': 'WFTextTokenAttachment',
+          }
+          text_output = {
+              'Value': {
+                  'OutputName': 'Text',
+                  'OutputUUID': get_text_uuid,
+                  'Type': 'ActionOutput',
+              },
+              'WFSerializationType': 'WFTextTokenAttachment',
+          }
+
           shortcut = {
               'WFWorkflowActions': [
                   {
+                      'WFWorkflowActionIdentifier': 'is.workflow.actions.gettext',
+                      'WFWorkflowActionParameters': {
+                          'UUID': get_text_uuid,
+                          'WFTextActionText': shortcut_input,
+                      },
+                  },
+                  {
                       'WFWorkflowActionIdentifier': 'is.workflow.actions.setclipboard',
                       'WFWorkflowActionParameters': {
-                          'UUID': U(),
+                          'UUID': copy_uuid,
+                          'WFInput': text_output,
                           'WFLocalOnly': True,
                       },
                   },
                   {
                       'WFWorkflowActionIdentifier': 'is.workflow.actions.openapp',
                       'WFWorkflowActionParameters': {
-                          'UUID': U(),
+                          'UUID': open_uuid,
                           'WFAppIdentifier': 'app.yew1778.zenith9466',
+                          'WFAppName': '红尘音卡',
                           'WFSelectedApp': {
                               'BundleIdentifier': 'app.yew1778.zenith9466',
                               'Name': '红尘音卡',
@@ -102,7 +128,7 @@ jobs:
           <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
           <title>汽水转红尘音卡快捷指令</title>
           <style>body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;max-width:680px;margin:0 auto;padding:36px 20px;line-height:1.65;background:#fff8f7;color:#222}.card{background:white;border-radius:24px;padding:28px;box-shadow:0 8px 30px #0001}a.btn{display:block;text-align:center;background:#bd1f32;color:white;text-decoration:none;padding:16px;border-radius:16px;font-size:20px;font-weight:700;margin:24px 0}.small{color:#666;font-size:14px}</style>
-          </head><body><div class="card"><h1>汽水转红尘音卡</h1><p>这是已经做好的快捷指令：从汽水音乐共享表单接收内容，复制到剪贴板，然后自动打开“红尘音卡”。</p><a class="btn" href="Qishui-to-Hongchen.shortcut">下载并添加快捷指令</a><p class="small">打开文件后，在“快捷指令”中点“添加快捷指令”。无需自己编辑动作。</p></div></body></html>''', encoding='utf-8')
+          </head><body><div class="card"><h1>汽水转红尘音卡</h1><p>V2：从汽水音乐共享表单取得文本 → 写入剪贴板 → 自动打开“红尘音卡”。无需自己编辑动作。</p><a class="btn" href="Qishui-to-Hongchen.shortcut">下载并添加快捷指令 V2</a><p class="small">如手机里已有旧版，请先删除旧的“汽水转红尘音卡”，再添加本版。</p></div></body></html>''', encoding='utf-8')
           PY
 
       - name: Commit shortcut
@@ -111,5 +137,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add install/Qishui-to-Hongchen.shortcut install/shortcut.html
-          git commit -m 'Publish signed Qishui to Hongchen shortcut'
+          git commit -m 'Publish fixed Qishui to Hongchen shortcut V2'
           git push
