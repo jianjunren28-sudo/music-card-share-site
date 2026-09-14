@@ -1,0 +1,53 @@
+name: Publish Run 19 IPA
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-run19.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download signed IPA artifact
+        run: |
+          set -euo pipefail
+          curl -fL 'https://sdmntpraustraliaeast.oaiusercontent.com/files/00000000-eeb4-81fa-a8d7-2738c24f945a/raw?se=2026-09-14T12%3A44%3A04Z&sp=r&sv=2026-02-06&sr=b&scid=8cfacce6-1ed1-5eae-b1aa-67807f6ae158&skoid=d5627e4c-566b-4761-a954-54993b0ed17b&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-14T02%3A50%3A47Z&ske=2026-09-15T02%3A50%3A47Z&sks=b&skv=2026-02-06&sig=kAaIefWN8DSVErAWEMbHfoOP%2BqiDaacGklEnviyhzvk%3D' -o /tmp/run19.zip
+          rm -rf /tmp/run19
+          mkdir -p /tmp/run19
+          unzip -q /tmp/run19.zip -d /tmp/run19
+          IPA=$(find /tmp/run19 -type f -name '*.ipa' -print -quit)
+          test -n "$IPA"
+          echo 'd74404eea75a62097715a2eb19933381e364e8fe243986081d80a10658a80ec0  '"$IPA" | sha256sum -c -
+          cp "$IPA" install/HongchenMusicCard-run19.ipa
+
+      - name: Update OTA manifest and install page
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('install/manifest.plist')
+          s = p.read_text()
+          s = s.replace('HongchenMusicCard-1.0-1.ipa', 'HongchenMusicCard-run19.ipa')
+          p.write_text(s)
+
+          p = Path('install/index.html')
+          s = p.read_text()
+          s = s.replace('GitHub Actions Run #17', 'GitHub Actions Run #19')
+          s = s.replace('F878E55E7F640815F368604920CB3E4F22EE1181301B50FF7535AAA50E8648F7', 'D74404EEA75A62097715A2EB19933381E364E8FE243986081D80A10658A80EC0')
+          s = s.replace('2026-09-14 15:31 (GMT+7)', '2026-09-14 17:40 (GMT+7)')
+          p.write_text(s)
+          PY
+
+      - name: Commit published files
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add install/HongchenMusicCard-run19.ipa install/manifest.plist install/index.html
+          git commit -m 'Publish signed IPA from Run 19'
+          git push origin HEAD:main
