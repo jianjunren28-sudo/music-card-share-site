@@ -1,1 +1,511 @@
 
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="音乐卡片分享助手——将用户主动提供的公开音乐分享链接解析为便于确认和分享的音乐卡片。">
+  <meta name="theme-color" content="#f7f8fa">
+  <title>音乐卡片分享助手</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fa;
+      --surface: rgba(255, 255, 255, 0.92);
+      --text: #18202a;
+      --muted: #657080;
+      --line: #e7eaf0;
+      --accent: #07c160;
+      --accent-dark: #079b4f;
+      --shadow: 0 18px 55px rgba(26, 39, 55, 0.09);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% 3%, rgba(7, 193, 96, 0.10), transparent 26rem),
+        radial-gradient(circle at 95% 22%, rgba(80, 130, 255, 0.08), transparent 24rem),
+        var(--bg);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; }
+
+    .container {
+      width: min(1080px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 72px;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 16px;
+      font-weight: 750;
+      text-decoration: none;
+    }
+
+    .logo {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      color: white;
+      background: linear-gradient(145deg, #19d678, #07a955);
+      box-shadow: 0 8px 20px rgba(7, 193, 96, 0.24);
+      font-size: 18px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .nav-links a { text-decoration: none; }
+    .nav-links a:hover { color: var(--accent-dark); }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+      align-items: center;
+      gap: 64px;
+      min-height: 560px;
+      padding: 76px 0 92px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      padding: 6px 12px;
+      border: 1px solid rgba(7, 193, 96, 0.22);
+      border-radius: 999px;
+      color: var(--accent-dark);
+      background: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(7, 193, 96, 0.12);
+    }
+
+    h1 {
+      max-width: 720px;
+      margin: 0;
+      font-size: clamp(42px, 6vw, 72px);
+      line-height: 1.08;
+      letter-spacing: -0.045em;
+    }
+
+    .lead {
+      max-width: 650px;
+      margin: 24px 0 0;
+      color: var(--muted);
+      font-size: clamp(17px, 2vw, 20px);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 34px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 20px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: white;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .button:hover { transform: translateY(-2px); box-shadow: 0 9px 24px rgba(26, 39, 55, 0.10); }
+    .button.primary { color: white; border-color: var(--accent); background: var(--accent); }
+
+    .phone-card {
+      position: relative;
+      max-width: 360px;
+      margin: 0 auto;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: 34px;
+      background: rgba(255, 255, 255, 0.64);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .phone-inner {
+      overflow: hidden;
+      padding: 30px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: white;
+    }
+
+    .album {
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border-radius: 20px;
+      background: linear-gradient(145deg, #16223b, #6a45d6 60%, #ff7b72);
+      color: white;
+      font-size: 72px;
+      box-shadow: inset 0 0 45px rgba(255, 255, 255, 0.10);
+    }
+
+    .song { margin: 22px 0 2px; font-size: 22px; font-weight: 800; }
+    .artist { margin: 0; color: var(--muted); font-size: 14px; }
+
+    .share-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .mini-action {
+      padding: 7px 12px;
+      border-radius: 10px;
+      color: white;
+      background: var(--accent);
+      font-weight: 700;
+    }
+
+    main section { padding: 88px 0; }
+    main section + section { border-top: 1px solid var(--line); }
+
+    .section-head { max-width: 680px; margin-bottom: 38px; }
+    .section-head h2 { margin: 0 0 12px; font-size: clamp(30px, 4vw, 44px); line-height: 1.2; letter-spacing: -0.025em; }
+    .section-head p { margin: 0; color: var(--muted); font-size: 17px; }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: 0 10px 32px rgba(26, 39, 55, 0.045);
+    }
+
+    .card-icon {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      margin-bottom: 18px;
+      border-radius: 12px;
+      color: var(--accent-dark);
+      background: rgba(7, 193, 96, 0.10);
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .card h3 { margin: 0 0 8px; font-size: 18px; }
+    .card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 14px;
+      counter-reset: process;
+    }
+
+    .step {
+      position: relative;
+      min-height: 200px;
+      padding: 24px 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: white;
+      counter-increment: process;
+    }
+
+    .step::before {
+      content: "0" counter(process);
+      display: block;
+      margin-bottom: 32px;
+      color: var(--accent-dark);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .step h3 { margin: 0 0 8px; font-size: 16px; line-height: 1.45; }
+    .step p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
+
+    .notice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .notice { padding: 34px; }
+    .notice ul { margin: 18px 0 0; padding: 0; list-style: none; }
+    .notice li { position: relative; margin-top: 10px; padding-left: 26px; color: var(--muted); }
+    .notice li::before { content: "✓"; position: absolute; left: 0; color: var(--accent-dark); font-weight: 900; }
+
+    .disclaimer {
+      margin-top: 20px;
+      padding: 26px 30px;
+      border-left: 4px solid var(--accent);
+      border-radius: 4px 16px 16px 4px;
+      background: rgba(7, 193, 96, 0.065);
+      color: #526070;
+    }
+
+    .contact {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 30px;
+      padding: 40px;
+      border-radius: 26px;
+      color: white;
+      background: #19232f;
+    }
+
+    .contact h2 { margin: 0 0 8px; font-size: 30px; }
+    .contact p { margin: 0; color: #b9c2cd; }
+    .contact a { flex: none; color: white; text-decoration: none; font-weight: 750; }
+
+    footer {
+      padding: 38px 0 max(38px, env(safe-area-inset-bottom));
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; gap: 48px; padding-top: 52px; }
+      .hero-copy { text-align: center; }
+      .lead { margin-left: auto; margin-right: auto; }
+      .hero-actions { justify-content: center; }
+      .steps { grid-template-columns: repeat(3, 1fr); }
+      .feature-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 620px) {
+      .container { width: min(100% - 28px, 1080px); }
+      .nav { min-height: 64px; }
+      .nav-links { display: none; }
+      .hero { min-height: auto; padding: 54px 0 72px; }
+      h1 { font-size: 45px; }
+      .phone-card { width: min(100%, 340px); }
+      main section { padding: 68px 0; }
+      .steps { grid-template-columns: 1fr 1fr; }
+      .step { min-height: 178px; }
+      .notice-grid { grid-template-columns: 1fr; }
+      .contact { align-items: flex-start; flex-direction: column; padding: 30px; }
+    }
+
+    @media (max-width: 390px) {
+      .steps { grid-template-columns: 1fr; }
+      .step { min-height: auto; }
+      .step::before { margin-bottom: 18px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .button { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="container">
+    <nav class="nav" aria-label="主导航">
+      <a class="brand" href="#top" aria-label="音乐卡片分享助手首页">
+        <span class="logo" aria-hidden="true">♫</span>
+        <span>音乐卡片分享助手</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">功能简介</a>
+        <a href="#process">使用流程</a>
+        <a href="#privacy">隐私说明</a>
+        <a href="#contact">联系我们</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <div class="container hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="dot" aria-hidden="true"></span> 简流、安全、由用户确认</div>
+        <h1>把公开音乐链接，变成清晰的分享卡片</h1>
+        <p class="lead">音乐卡片分享助手读取用户主动提供的公开分享链接，整理歌曲信息，并在用户确认后分享到微信。</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#process">查看使用流程</a>
+          <a class="button" href="#privacy">了解隐私说明</a>
+        </div>
+      </div>
+
+      <div class="phone-card" aria-label="音乐分享卡片示意图">
+        <div class="phone-inner">
+          <div class="album" aria-hidden="true">♫</div>
+          <p class="song">歌曲名称</p>
+          <p class="artist">歌手名称 · 公开分享页</p>
+          <div class="share-row">
+            <span>信息确认完成</span>
+            <span class="mini-action">分享到微信</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section id="features">
+      <div class="container">
+        <div class="section-head">
+          <h2>专注于公开链接的信息整理</h2>
+          <p>应用仅处理用户主动复制并提交的公开音乐分享链接，让分享前的信息更直观。</p>
+        </div>
+        <div class="feature-grid">
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">链</div>
+            <h3>读取公开分享链接</h3>
+            <p>通过 iPhone 快捷指令读取剪贴板中由用户主动复制的公开链接。</p>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">析</div>
+            <h3>整理歌曲信息</h3>
+            <p>解析并展示歌名、歌手、封面及对应的公开分享页面。</p>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">享</div>
+            <h3>确认后分享</h3>
+            <p>信息先交由用户确认，只有用户主动操作后才会唤起微信分享。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="process">
+      <div class="container">
+        <div class="section-head">
+          <h2>使用流程</h2>
+          <p>从复制公开链接到完成分享，全程由用户主动发起和确认。</p>
+        </div>
+        <div class="steps">
+          <article class="step">
+            <h3>复制分享链接</h3>
+            <p>在汽水音乐中复制歌曲的公开分享链接。</p>
+          </article>
+          <article class="step">
+            <h3>读取剪贴板</h3>
+            <p>运行 iPhone 快捷指令，读取用户刚刚复制的链接。</p>
+          </article>
+          <article class="step">
+            <h3>打开本应用</h3>
+            <p>快捷指令打开“音乐卡片分享助手”。</p>
+          </article>
+          <article class="step">
+            <h3>解析公开信息</h3>
+            <p>整理歌名、歌手、封面和公开分享页。</p>
+          </article>
+          <article class="step">
+            <h3>用户确认</h3>
+            <p>展示音乐卡片，由用户核对分享内容。</p>
+          </article>
+          <article class="step">
+            <h3>分享到微信</h3>
+            <p>用户主动确认后，唤起微信完成分享。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="privacy">
+      <div class="container">
+        <div class="section-head">
+          <h2>隐私与合规说明</h2>
+          <p>应用以最小化处理为原则，仅为生成和确认分享卡片处理必要的公开信息。</p>
+        </div>
+        <div class="notice-grid">
+          <article class="card notice">
+            <h3>隐私说明</h3>
+            <ul>
+              <li>不下载、缓存或分发音乐音频内容。</li>
+              <li>不绕过付费会员权限、访问限制或 DRM 数字版权保护。</li>
+              <li>不存储用户隐私数据，不建立用户画像。</li>
+              <li>仅处理用户主动提供的公开分享链接及其公开展示信息。</li>
+            </ul>
+          </article>
+          <article class="card notice">
+            <h3>用户控制</h3>
+            <ul>
+              <li>链接由用户主动复制并通过快捷指令提交。</li>
+              <li>分享卡片会在发送前展示给用户确认。</li>
+              <li>应用不会在未经用户操作的情况下自动发布内容。</li>
+              <li>用户可随时取消操作并停止分享。</li>
+            </ul>
+          </article>
+        </div>
+        <div class="disclaimer">
+          <strong>免责声明：</strong>“音乐卡片分享助手”与汽水音乐、微信及其运营主体不存在官方隶属、授权、合作或背书关系。本应用仅处理用户主动提供的公开分享链接；相关名称及商标归其各自权利人所有。
+        </div>
+      </div>
+    </section>
+
+    <section id="contact">
+      <div class="container">
+        <div class="contact">
+          <div>
+            <h2>联系我们</h2>
+            <p>如有产品、隐私或合规问题，欢迎通过电子邮件联系。</p>
+          </div>
+          <!-- 部署前请将下方占位邮箱替换为真实、可联系的邮箱。 -->
+          <a href="mailto:1148963603@qq.com">1148963603@qq.com</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container">
+    <span>© <span id="year"></span> 音乐卡片分享助手 · 保留所有权利</span>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
